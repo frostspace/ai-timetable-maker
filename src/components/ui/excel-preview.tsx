@@ -6,6 +6,7 @@ interface Cell {
   value: string;
   editable?: boolean;
   highlighted?: boolean;
+  color?: string;
 }
 
 interface ExcelPreviewProps {
@@ -44,31 +45,43 @@ export function ExcelPreview({ data, onCellChange }: ExcelPreviewProps) {
         <tbody>
           {data.map((row, rowIndex) => (
             <tr key={rowIndex} className={rowIndex === 0 ? "bg-gray-100" : ""}>
-              {row.map((cell, colIndex) => (
-                <td
-                  key={`${rowIndex}-${colIndex}`}
-                  className={`border px-4 py-2 ${cell.highlighted ? "bg-blue-50" : ""} ${
-                    cell.editable ? "cursor-text hover:bg-gray-50" : ""
-                  }`}
-                  onClick={() => handleCellClick(rowIndex, colIndex, cell)}
-                >
-                  {editingCell &&
-                  editingCell.row === rowIndex &&
-                  editingCell.col === colIndex ? (
-                    <input
-                      type="text"
-                      value={cellValue}
-                      onChange={(e) => setCellValue(e.target.value)}
-                      onBlur={handleCellBlur}
-                      onKeyDown={handleKeyDown}
-                      className="w-full p-0 border-none focus:outline-none bg-transparent"
-                      autoFocus
-                    />
-                  ) : (
-                    cell.value
-                  )}
-                </td>
-              ))}
+              {row.map((cell, colIndex) => {
+                // Determine cell background color
+                let bgColor = cell.highlighted ? "bg-blue-50" : "";
+                
+                // If a custom color is specified, use that instead
+                if (cell.color && colIndex > 0 && rowIndex > 0) {
+                  // Override the default background with the custom color
+                  bgColor = "";
+                }
+                
+                return (
+                  <td
+                    key={`${rowIndex}-${colIndex}`}
+                    className={`border px-4 py-2 ${bgColor} ${
+                      cell.editable ? "cursor-text hover:bg-gray-50" : ""
+                    }`}
+                    onClick={() => handleCellClick(rowIndex, colIndex, cell)}
+                    style={cell.color && colIndex > 0 && rowIndex > 0 ? { backgroundColor: cell.color } : {}}
+                  >
+                    {editingCell &&
+                    editingCell.row === rowIndex &&
+                    editingCell.col === colIndex ? (
+                      <input
+                        type="text"
+                        value={cellValue}
+                        onChange={(e) => setCellValue(e.target.value)}
+                        onBlur={handleCellBlur}
+                        onKeyDown={handleKeyDown}
+                        className="w-full p-0 border-none focus:outline-none bg-transparent"
+                        autoFocus
+                      />
+                    ) : (
+                      cell.value
+                    )}
+                  </td>
+                );
+              })}
             </tr>
           ))}
         </tbody>

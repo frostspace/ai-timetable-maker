@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { downloadSubjectsAsExcel } from "@/lib/excel-utils";
+import { downloadSubjectsAsPDF } from "@/lib/pdf-utils";
 
 interface Subject {
   id: string;
@@ -75,6 +76,12 @@ export default function TimetablePage() {
     downloadSubjectsAsExcel(subjects, `subjects-${today}.xlsx`);
   };
 
+  const downloadPDF = () => {
+    // Generate and download the PDF file directly from the browser
+    const today = new Date().toISOString().split('T')[0];
+    downloadSubjectsAsPDF(subjects, `subjects-${today}.pdf`, "Subject List");
+  };
+
   const goToChat = () => {
     // Store subjects in localStorage or state management before navigating
     localStorage.setItem("timetableSubjects", JSON.stringify(subjects));
@@ -85,6 +92,13 @@ export default function TimetablePage() {
     // Store subjects in localStorage before navigating
     localStorage.setItem("timetableSubjects", JSON.stringify(subjects));
     router.push("/timetable/view");
+  };
+
+  const autoGenerateTimetable = () => {
+    // Store subjects in localStorage before navigating
+    localStorage.setItem("timetableSubjects", JSON.stringify(subjects));
+    // Navigate to the view page with auto-generate flag
+    router.push("/timetable/view?auto=true");
   };
 
   return (
@@ -254,17 +268,50 @@ export default function TimetablePage() {
 
       {subjects.length > 0 && (
         <div className="flex flex-wrap gap-4">
-          <button
-            onClick={downloadExcel}
-            className="px-6 py-3 bg-green-600 text-white rounded-md hover:bg-green-700"
-          >
-            Download as Excel
-          </button>
+          <div className="relative inline-block">
+            <button
+              onClick={() => document.getElementById('exportDropdown')?.classList.toggle('hidden')}
+              className="px-6 py-3 bg-green-600 text-white rounded-md hover:bg-green-700"
+            >
+              Export Data
+            </button>
+            <div id="exportDropdown" className="hidden absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
+              <div className="py-1" role="menu" aria-orientation="vertical">
+                <button
+                  onClick={downloadExcel}
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                  role="menuitem"
+                >
+                  Download as Excel (.xlsx)
+                </button>
+                <button
+                  onClick={downloadPDF}
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                  role="menuitem"
+                >
+                  Download as PDF
+                </button>
+                <button
+                  onClick={() => window.print()}
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                  role="menuitem"
+                >
+                  Print Subject List
+                </button>
+              </div>
+            </div>
+          </div>
           <button
             onClick={viewTimetable}
             className="px-6 py-3 bg-purple-600 text-white rounded-md hover:bg-purple-700"
           >
             View & Edit Timetable
+          </button>
+          <button
+            onClick={autoGenerateTimetable}
+            className="px-6 py-3 bg-orange-600 text-white rounded-md hover:bg-orange-700"
+          >
+            Auto-Generate Timetable
           </button>
           <button
             onClick={goToChat}
