@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ExcelPreview } from "@/components/ui/excel-preview";
@@ -27,7 +27,17 @@ interface Subject {
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 const PERIODS = Array.from({ length: 8 }, (_, i) => i + 1);
 
+// Main component wrapper with Suspense
 export default function TimetableViewPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center">Loading timetable view...</div>}>
+      <TimetableViewContent />
+    </Suspense>
+  );
+}
+
+// Internal component that uses useSearchParams
+function TimetableViewContent() {
   const searchParams = useSearchParams();
   const autoGenerate = searchParams.get("auto") === "true";
   const [timetableData, setTimetableData] = useState<Cell[][]>([]);
@@ -225,7 +235,7 @@ export default function TimetableViewPage() {
           <h2 className="text-xl font-semibold">Timetable</h2>
           <div className="flex flex-wrap gap-3 mt-2 sm:mt-0">
             <button
-              onClick={handleAutoGenerate}
+              onClick={() => handleAutoGenerate()}
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
               disabled={!subjects.length}
             >

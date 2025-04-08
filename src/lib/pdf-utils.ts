@@ -9,6 +9,11 @@ interface Cell {
   color?: string;
 }
 
+// Define a type for the cell style object
+interface CellStyle {
+  fillColor?: [number, number, number];
+}
+
 export const downloadTimetableAsPDF = (
   timetableData: Cell[][],
   filename: string = 'timetable.pdf',
@@ -33,18 +38,19 @@ export const downloadTimetableAsPDF = (
     return row.map(cell => cell.value);
   });
   
-  // Set up color styles for the cells
-  const styles = timetableData.slice(1).map(row => {
+  // Set up color styles for the cells, explicitly typed
+  const styles: CellStyle[][] = timetableData.slice(1).map(row => {
     return row.map(cell => {
+      const cellStyle: CellStyle = {}; // Explicitly type the object
       if (cell.highlighted && !cell.color) {
-        return { fillColor: [235, 245, 255] }; // Light blue for highlighted cells
+        cellStyle.fillColor = [235, 245, 255]; // Light blue for highlighted cells
       }
       if (cell.color) {
         // Convert HSL color to RGB for PDF
         const color = convertHSLtoRGB(cell.color);
-        return { fillColor: color };
+        cellStyle.fillColor = color;
       }
-      return {};
+      return cellStyle;
     });
   });
   
@@ -64,28 +70,20 @@ export const downloadTimetableAsPDF = (
       textColor: 255,
       fontStyle: 'bold',
     },
-    didDrawCell: (data) => {
-      // Apply custom styling to cells
-      if (data.section === 'body' && data.row.index < styles.length && data.column.index < styles[data.row.index].length) {
-        const cellStyle = styles[data.row.index][data.column.index];
-        if (cellStyle.fillColor) {
-          // Cell already styled in the autoTable options
-        }
-      }
-    },
     willDrawCell: (data) => {
       // Apply custom cell styling before drawing
       if (data.section === 'body' && data.row.index < styles.length && data.column.index < styles[data.row.index].length) {
         const style = styles[data.row.index][data.column.index];
         if (style.fillColor) {
-          data.cell.styles.fillColor = style.fillColor;
+          // Type assertion might be needed if TS still complains, but let's try without first
+          data.cell.styles.fillColor = style.fillColor; 
         }
       }
     }
   });
   
   // Add footer with information
-  const pageCount = doc.internal.getNumberOfPages();
+  const pageCount = (doc as any).internal.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
     doc.setFontSize(10);
@@ -103,7 +101,7 @@ export const downloadTimetableAsPDF = (
 };
 
 // Helper function to convert HSL color to RGB for PDF
-function convertHSLtoRGB(hslColor: string): number[] {
+function convertHSLtoRGB(hslColor: string): [number, number, number] {
   // Parse HSL values
   const hslMatch = hslColor.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
   if (!hslMatch) return [240, 240, 240]; // Default light gray if parsing fails
@@ -189,7 +187,7 @@ export const downloadSubjectsAsPDF = (
   });
   
   // Add footer with information
-  const pageCount = doc.internal.getNumberOfPages();
+  const pageCount = (doc as any).internal.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
     doc.setFontSize(10);
